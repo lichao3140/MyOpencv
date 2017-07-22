@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants;
 import com.lqh.lichao.myopencv.com.lqh.lichao.util.ImageProcessUtils;
@@ -112,14 +113,30 @@ public class ProcessImageActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void processCommand() {
-        Bitmap temp = selectedBitmap.copy(selectedBitmap.getConfig(), true);
-        if(CommandConstants.TEST_ENV_COMMAND.equals(command)) {
-           temp = ImageProcessUtils.convert2Gray(temp);
-        } else if(CommandConstants.MAT_PIXEL_INVERT_COMMAND.equals(command)) {
-            temp = ImageProcessUtils.invert(temp);
-        } else if(CommandConstants.BITMAP_PIXEL_INVERT_COMMAND.equals(command)) {
-            ImageProcessUtils.localInvert(temp);
+        if (!selectedBitmap.getConfig().toString().equals("")) {
+            Bitmap temp = selectedBitmap.copy(selectedBitmap.getConfig(), true);
+            if(CommandConstants.TEST_ENV_COMMAND.equals(command)) {
+                temp = ImageProcessUtils.convert2Gray(temp);
+            } else if(CommandConstants.MAT_PIXEL_INVERT_COMMAND.equals(command)) {
+                temp = ImageProcessUtils.invert(temp);
+            } else if(CommandConstants.BITMAP_PIXEL_INVERT_COMMAND.equals(command)) {
+                ImageProcessUtils.localInvert(temp);
+            } else if(CommandConstants.PIXEL_SUBSTRACT_COMMAND.equals(command)) {
+                ImageProcessUtils.subtract(temp);
+            } else if(CommandConstants.PIXEL_ADD_COMMAND.equals(command)) {
+                ImageProcessUtils.add(temp);
+            } else if(CommandConstants.ADJUST_CONTRAST_COMMAND.equals(command)) {
+                ImageProcessUtils.adjustContrast(temp);
+            } else if(CommandConstants.IMAGE_CONTAINER_COMMAND.equals(command)) {
+                temp = ImageProcessUtils.demoMatUsage();
+            } else if(CommandConstants.SUB_IMAGE_COMMAND.equals(command)) {
+                temp = ImageProcessUtils.getROIArea(temp);
+            } else if(CommandConstants.BLUR_IMAGE_COMMAND.equals(command)) {
+                ImageProcessUtils.meanBlur(temp);
+            }
+            imageView.setImageBitmap(temp);
+        } else {
+            Toast.makeText(this, "请选择一张图片", Toast.LENGTH_SHORT).show();
         }
-        imageView.setImageBitmap(temp);
     }
 }
