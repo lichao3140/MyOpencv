@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
+import com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants;
+
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -13,6 +15,10 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+
+import static com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants.CUSTOM_BLUR_COMMAND;
+import static com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants.CUSTOM_EDGE_COMMAND;
+import static com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants.CUSTOM_SHARPEN_COMMAND;
 
 /**
  * Created by Administrator on 2017-07-21.
@@ -189,5 +195,85 @@ public class ImageProcessUtils {
         dst.release();
     }
 
+    /**
+     * 高斯模糊
+     * @param bitmap
+     */
+    public static void gaussianBlur(Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.GaussianBlur(src, dst, new Size(5, 5), 0, 0, 4);
+        Utils.matToBitmap(dst, bitmap);
+        src.release();
+        dst.release();
+    }
 
+    /**
+     * 双边模糊
+     * @param bitmap
+     */
+    public static void biBlur(Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2BGR);
+        Imgproc.bilateralFilter(src, dst, 15, 150, 15, Imgproc.BORDER_DEFAULT);//双边模糊
+        Mat kernel = new Mat(3, 3, CvType.CV_16S);//锐化
+        kernel.put(0, 0, 0, -1, 0, -1, 5, -1, 0, -1, 0);//锐化算子
+        Imgproc.filter2D(dst, dst, -1, kernel, new Point(-1, -1), 0.0, 4);
+        Utils.matToBitmap(dst, bitmap);
+        src.release();
+        dst.release();
+    }
+
+    /**
+     * 自定义算子-模糊
+     * @param command
+     * @param bitmap
+     */
+    public static void customFilter(String command, Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Mat kernel = getCustomOperator(command);
+        Imgproc.filter2D(src, dst, -1, kernel, new Point(-1, -1), 0.0, 4);
+        Utils.matToBitmap(dst, bitmap);
+        kernel.release();
+        src.release();
+        dst.release();
+    }
+
+    private static Mat getCustomOperator(String command) {
+        Mat kernel = new Mat(3, 3, CvType.CV_32FC1);//为了中心化宽高最好是奇数，32--对应double float，16--int
+        if(CUSTOM_BLUR_COMMAND.equals(command)) {
+            kernel.put(0, 0, 1.0/9.0, 1.0/9.0, 1.0/9.0, 1.0/9.0, 1.0/9.0, 1.0/9.0, 1.0/9.0, 1.0/9.0, 1.0/9.0);
+        } else if(CUSTOM_EDGE_COMMAND.equals(command)) {
+            kernel.put(0, 0, -1, -1, -1, -1, 8, -1, -1, -1, -1);
+        } else if(CUSTOM_SHARPEN_COMMAND.equals(command)) {
+            kernel.put(0, 0, -1, -1, -1, -1, 9, -1, -1, -1, -1);
+        }
+        return kernel;
+    }
+
+    /**
+     * 腐蚀和膨胀
+     * @param command
+     * @param bitmap
+     */
+    public static void erodOrDilate(String command, Bitmap bitmap) {
+        boolean erode = command.equals(CommandConstants.ERODE_COMMAND);
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Mat strElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3), new Point(-1, -1));//MORPH_RECT结构元素
+        if(erode) {
+            Imgproc.erode(src, dst, strElement, new Point(-1, -1), 5);//腐蚀
+        } else {
+            Imgproc.dilate(src, dst, strElement, new Point(-1, -1), 1);//膨胀
+        }
+        Utils.matToBitmap(dst, bitmap);
+        src.release();
+        dst.release();
+    }
 }

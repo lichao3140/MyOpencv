@@ -11,10 +11,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
-
 import com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants;
 import com.lqh.lichao.myopencv.com.lqh.lichao.util.ImageProcessUtils;
-
 import org.opencv.android.OpenCVLoader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -133,6 +131,17 @@ public class ProcessImageActivity extends AppCompatActivity implements View.OnCl
                 temp = ImageProcessUtils.getROIArea(temp);
             } else if(CommandConstants.BLUR_IMAGE_COMMAND.equals(command)) {
                 ImageProcessUtils.meanBlur(temp);
+            } else if(CommandConstants.GAUSSIAN_BLUR_COMMAND.equals(command)) {
+                ImageProcessUtils.gaussianBlur(temp);
+            } else if(CommandConstants.BI_BLUR_COMMAND.equals(command)) {
+                ImageProcessUtils.biBlur(temp);
+            } else if(CommandConstants.CUSTOM_BLUR_COMMAND.equals(command)||
+                    CommandConstants.CUSTOM_EDGE_COMMAND.equals(command)||
+                    CommandConstants.CUSTOM_SHARPEN_COMMAND.equals(command)) {
+                ImageProcessUtils.customFilter(command, temp);
+            } else if(CommandConstants.ERODE_COMMAND.equals(command)||
+                    CommandConstants.DILATE_COMMAND.equals(command)) {
+                ImageProcessUtils.erodOrDilate(command, temp);
             }
             imageView.setImageBitmap(temp);
         } else {
