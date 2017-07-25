@@ -1,11 +1,8 @@
 package com.lqh.lichao.myopencv.com.lqh.lichao.util;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
-
 import com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants;
-
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -15,7 +12,6 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-
 import static com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants.CUSTOM_BLUR_COMMAND;
 import static com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants.CUSTOM_EDGE_COMMAND;
 import static com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants.CUSTOM_SHARPEN_COMMAND;
@@ -275,5 +271,77 @@ public class ImageProcessUtils {
         Utils.matToBitmap(dst, bitmap);
         src.release();
         dst.release();
+    }
+
+    /**
+     * 开闭操作
+     * @param command
+     * @param bitmap
+     */
+    public static void openOrClose(String command, Bitmap bitmap) {
+        boolean open = command.equals(CommandConstants.OPEN_COMMAND);
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2GRAY);
+        Imgproc.threshold(src, src, 0, 255, Imgproc.THRESH_BINARY_INV | Imgproc.THRESH_OTSU);
+        Mat strElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3), new Point(-1, -1));
+        if(open) {
+            Imgproc.morphologyEx(src, dst, Imgproc.MORPH_OPEN, strElement);
+        } else {
+            Imgproc.morphologyEx(src, dst, Imgproc.MORPH_CLOSE, strElement);
+        }
+        Utils.matToBitmap(dst, bitmap);
+        src.release();
+        dst.release();
+    }
+
+    /**
+     * 直线检测
+     * @param bitmap
+     */
+    public static void morphLineDetection(Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2GRAY);
+        Imgproc.threshold(src, src, 0, 255, Imgproc.THRESH_BINARY_INV | Imgproc.THRESH_OTSU);//阈值
+        Mat strElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(40, 1), new Point(-1, -1));
+        Imgproc.morphologyEx(src, dst, Imgproc.MORPH_OPEN, strElement);
+        Utils.matToBitmap(dst, bitmap);
+        src.release();
+        dst.release();
+    }
+
+    /**
+     * 阈值二值化
+     * @param command
+     * @param bitmap
+     */
+    public static void thresholdImg(String command, Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2GRAY);
+        Imgproc.threshold(src, dst, 0, 255, getType(command));
+        Utils.matToBitmap(dst, bitmap);
+        src.release();
+        dst.release();
+    }
+
+    private static int getType(String command) {
+        if(CommandConstants.THRESHOLD_BINARY_COMMAND.equals(command)) {
+            return (Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
+        } else if(CommandConstants.THRESHOLD_BINARY_INV_COMMAND.equals(command)) {
+            return (Imgproc.THRESH_BINARY_INV | Imgproc.THRESH_OTSU);
+        } else if(CommandConstants.THRESHOLD_TRUNCAT_COMMAND.equals(command)) {
+            return (Imgproc.THRESH_TRUNC | Imgproc.THRESH_OTSU);
+        } else if(CommandConstants.THRESHOLD_ZERO_COMMAND.equals(command)) {
+            return (Imgproc.THRESH_TOZERO | Imgproc.THRESH_OTSU);
+        } else if(CommandConstants.THRESHOLD_ZERO_INV_COMMAND.equals(command)) {
+            return (Imgproc.THRESH_TOZERO_INV | Imgproc.THRESH_OTSU);
+        } else {
+            return (Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
+        }
     }
 }

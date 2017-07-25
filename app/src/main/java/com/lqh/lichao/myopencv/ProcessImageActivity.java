@@ -39,12 +39,14 @@ public class ProcessImageActivity extends AppCompatActivity implements View.OnCl
         command = this.getIntent().getStringExtra("command");
         testBtn = (Button) findViewById(R.id.test_button);
         selecBbtn = (Button) findViewById(R.id.select_imgButton);
-        imageView = (ImageView)this.findViewById(R.id.test_imageView);
+        imageView = (ImageView) findViewById(R.id.test_imageView);
 
         testBtn.setTag("PROCESS");
         testBtn.setText(command);
         testBtn.setOnClickListener(this);
         selecBbtn.setOnClickListener(this);
+
+        selectedBitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.test1);
         imageView.setImageBitmap(selectedBitmap);
     }
 
@@ -111,41 +113,49 @@ public class ProcessImageActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void processCommand() {
-        if (!selectedBitmap.getConfig().toString().equals("")) {
-            Bitmap temp = selectedBitmap.copy(selectedBitmap.getConfig(), true);
-            if(CommandConstants.TEST_ENV_COMMAND.equals(command)) {
-                temp = ImageProcessUtils.convert2Gray(temp);
-            } else if(CommandConstants.MAT_PIXEL_INVERT_COMMAND.equals(command)) {
-                temp = ImageProcessUtils.invert(temp);
-            } else if(CommandConstants.BITMAP_PIXEL_INVERT_COMMAND.equals(command)) {
-                ImageProcessUtils.localInvert(temp);
-            } else if(CommandConstants.PIXEL_SUBSTRACT_COMMAND.equals(command)) {
-                ImageProcessUtils.subtract(temp);
-            } else if(CommandConstants.PIXEL_ADD_COMMAND.equals(command)) {
-                ImageProcessUtils.add(temp);
-            } else if(CommandConstants.ADJUST_CONTRAST_COMMAND.equals(command)) {
-                ImageProcessUtils.adjustContrast(temp);
-            } else if(CommandConstants.IMAGE_CONTAINER_COMMAND.equals(command)) {
-                temp = ImageProcessUtils.demoMatUsage();
-            } else if(CommandConstants.SUB_IMAGE_COMMAND.equals(command)) {
-                temp = ImageProcessUtils.getROIArea(temp);
-            } else if(CommandConstants.BLUR_IMAGE_COMMAND.equals(command)) {
-                ImageProcessUtils.meanBlur(temp);
-            } else if(CommandConstants.GAUSSIAN_BLUR_COMMAND.equals(command)) {
-                ImageProcessUtils.gaussianBlur(temp);
-            } else if(CommandConstants.BI_BLUR_COMMAND.equals(command)) {
-                ImageProcessUtils.biBlur(temp);
-            } else if(CommandConstants.CUSTOM_BLUR_COMMAND.equals(command)||
-                    CommandConstants.CUSTOM_EDGE_COMMAND.equals(command)||
-                    CommandConstants.CUSTOM_SHARPEN_COMMAND.equals(command)) {
-                ImageProcessUtils.customFilter(command, temp);
-            } else if(CommandConstants.ERODE_COMMAND.equals(command)||
-                    CommandConstants.DILATE_COMMAND.equals(command)) {
-                ImageProcessUtils.erodOrDilate(command, temp);
-            }
-            imageView.setImageBitmap(temp);
-        } else {
-            Toast.makeText(this, "请选择一张图片", Toast.LENGTH_SHORT).show();
+        Bitmap temp = selectedBitmap.copy(selectedBitmap.getConfig(), true);
+        if(CommandConstants.TEST_ENV_COMMAND.equals(command)) {
+            temp = ImageProcessUtils.convert2Gray(temp);
+        } else if(CommandConstants.MAT_PIXEL_INVERT_COMMAND.equals(command)) {
+            temp = ImageProcessUtils.invert(temp);
+        } else if(CommandConstants.BITMAP_PIXEL_INVERT_COMMAND.equals(command)) {
+            ImageProcessUtils.localInvert(temp);
+        } else if(CommandConstants.PIXEL_SUBSTRACT_COMMAND.equals(command)) {
+            ImageProcessUtils.subtract(temp);
+        } else if(CommandConstants.PIXEL_ADD_COMMAND.equals(command)) {
+            ImageProcessUtils.add(temp);
+        } else if(CommandConstants.ADJUST_CONTRAST_COMMAND.equals(command)) {
+            ImageProcessUtils.adjustContrast(temp);
+        } else if(CommandConstants.IMAGE_CONTAINER_COMMAND.equals(command)) {
+            temp = ImageProcessUtils.demoMatUsage();
+        } else if(CommandConstants.SUB_IMAGE_COMMAND.equals(command)) {
+            temp = ImageProcessUtils.getROIArea(temp);
+        } else if(CommandConstants.BLUR_IMAGE_COMMAND.equals(command)) {
+            ImageProcessUtils.meanBlur(temp);
+        } else if(CommandConstants.GAUSSIAN_BLUR_COMMAND.equals(command)) {
+            ImageProcessUtils.gaussianBlur(temp);
+        } else if(CommandConstants.BI_BLUR_COMMAND.equals(command)) {
+            ImageProcessUtils.biBlur(temp);
+        } else if(CommandConstants.CUSTOM_BLUR_COMMAND.equals(command)||
+                CommandConstants.CUSTOM_EDGE_COMMAND.equals(command)||
+                CommandConstants.CUSTOM_SHARPEN_COMMAND.equals(command)) {
+            ImageProcessUtils.customFilter(command, temp);
+        } else if(CommandConstants.ERODE_COMMAND.equals(command)||
+                CommandConstants.DILATE_COMMAND.equals(command)) {
+            ImageProcessUtils.erodOrDilate(command, temp);
+        } else if(CommandConstants.OPEN_COMMAND.equals(command)||
+                CommandConstants.CLOSE_COMMAND.equals(command)) {
+            ImageProcessUtils.openOrClose(command, temp);
+        } else if(CommandConstants.MORPH_LINE_COMMAND.equals(command)) {
+            ImageProcessUtils.morphLineDetection(temp);
+        } else if(CommandConstants.THRESHOLD_BINARY_COMMAND.equals(command)||
+                CommandConstants.THRESHOLD_BINARY_INV_COMMAND.equals(command)||
+                CommandConstants.THRESHOLD_TRUNCAT_COMMAND.equals(command)||
+                CommandConstants.THRESHOLD_ZERO_COMMAND.equals(command) ||
+                CommandConstants.THRESHOLD_ZERO_INV_COMMAND.equals(command)) {
+            ImageProcessUtils.thresholdImg(command, temp);
         }
+        imageView.setImageBitmap(temp);
     }
+
 }
