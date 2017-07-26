@@ -154,6 +154,14 @@ public class ProcessImageActivity extends AppCompatActivity implements View.OnCl
                 CommandConstants.THRESHOLD_ZERO_COMMAND.equals(command) ||
                 CommandConstants.THRESHOLD_ZERO_INV_COMMAND.equals(command)) {
             ImageProcessUtils.thresholdImg(command, temp);
+        } else if(CommandConstants.HISTOGRAM_EQ_COMMAND.equals(command)) {
+            ImageProcessUtils.histogramEq(temp);
+        } else if(CommandConstants.GRADIENT_SOBEL_X_COMMAND.equals(command)) {
+            ImageProcessUtils.sobleGradient(temp, 1);
+        } else if(CommandConstants.GRADIENT_SOBEL_Y_COMMAND.equals(command)) {
+            ImageProcessUtils.sobleGradient(temp, 2);
+        } else if(CommandConstants.GRADIENT_IMG_COMMAND.equals(command)) {
+            ImageProcessUtils.sobleGradient(temp, 3);
         }
         imageView.setImageBitmap(temp);
     }

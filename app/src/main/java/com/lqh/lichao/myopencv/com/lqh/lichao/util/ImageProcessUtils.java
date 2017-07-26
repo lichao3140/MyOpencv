@@ -344,4 +344,89 @@ public class ImageProcessUtils {
             return (Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
         }
     }
+
+    /**
+     * 调节阈值二值化
+     * @param t
+     * @param bitmap
+     */
+    public static void manualThresholdBinary(int t, Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2GRAY);
+        Imgproc.threshold(src, dst, t, 255, Imgproc.THRESH_BINARY );
+        Utils.matToBitmap(dst, bitmap);
+        src.release();
+        dst.release();
+    }
+
+    /**
+     * 自适应阈值
+     * @param size 一定为奇数
+     * @param bitmap
+     * @param gaussian
+     */
+    public static void adaptiveThresholdBinary(int size, Bitmap bitmap, boolean gaussian) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2GRAY);
+        Imgproc.adaptiveThreshold(src, dst, 255, (gaussian?Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C:Imgproc.ADAPTIVE_THRESH_MEAN_C),
+                Imgproc.THRESH_BINARY, size, 0.0);
+        Utils.matToBitmap(dst, bitmap);
+        src.release();
+        dst.release();
+    }
+
+    /**
+     * 直方图均衡化
+     * @param bitmap
+     */
+    public static void histogramEq(Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2GRAY);
+        Imgproc.equalizeHist(src, dst);
+        Utils.matToBitmap(dst, bitmap);
+        src.release();
+        dst.release();
+    }
+
+    /***
+     * 图像梯度
+     * 1 - X 方向
+     * 2 - Y 方向
+     * 3 - XY方向
+     * @param bitmap
+     * @param type
+     */
+    public static void sobleGradient(Bitmap bitmap, int type) {
+        Mat src = new Mat();
+        Mat xgrad = new Mat();
+        Mat ygrad = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        if(type == 1) {
+            Imgproc.Scharr(src, xgrad, CvType.CV_16S, 1, 0);
+            Core.convertScaleAbs(xgrad, xgrad);
+            Utils.matToBitmap(xgrad, bitmap);
+        } else if(type == 2){
+            Imgproc.Scharr(src, ygrad, CvType.CV_16S, 0, 1);
+            Core.convertScaleAbs(ygrad, ygrad);
+            Utils.matToBitmap(ygrad, bitmap);
+        } else if(type == 3) {
+            Imgproc.Scharr(src, xgrad, CvType.CV_16S, 1, 0);
+            Imgproc.Scharr(src, ygrad, CvType.CV_16S, 0, 1);
+            Core.convertScaleAbs(xgrad, xgrad);
+            Core.convertScaleAbs(ygrad, ygrad);
+            Mat dst = new Mat();
+            Core.addWeighted(xgrad, 0.5, ygrad, 0.5, 30, dst);
+            Utils.matToBitmap(dst, bitmap);
+            dst.release();
+        }
+        src.release();
+        xgrad.release();
+        ygrad.release();
+    }
 }

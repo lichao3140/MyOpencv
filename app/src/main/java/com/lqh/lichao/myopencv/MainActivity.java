@@ -42,7 +42,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void processCommand() {
-        if(CommandConstants.ADAPTIVE_THRESHOLD_COMMAND.equals(command) ||
+        if(CommandConstants.THRESHOLD_BINARY_COMMAND.equals(command) ||
+                CommandConstants.ADAPTIVE_THRESHOLD_COMMAND.equals(command) ||
                 CommandConstants.ADAPTIVE_GAUSSIAN_COMMAND.equals(command) ||
                 CommandConstants.HOUGH_LINES_COMMAND.equals(command) ||
                 CommandConstants.HOUGH_CIRCLE_COMMAND.equals(command) ||

@@ -127,8 +127,12 @@ public class ThresholdProcessActivity extends AppCompatActivity implements View.
             t = t + 1;
         }
         Bitmap temp = selectedBitmap.copy(selectedBitmap.getConfig(), true);
-        if(CommandConstants.ADAPTIVE_THRESHOLD_COMMAND.equals(command)) {
-            ImageProcessUtils.thresholdImg(command, temp);
+        if(CommandConstants.THRESHOLD_BINARY_COMMAND.equals(command)) {
+            ImageProcessUtils.manualThresholdBinary(t, temp);
+        } else if(CommandConstants.ADAPTIVE_THRESHOLD_COMMAND.equals(command)) {
+            ImageProcessUtils.adaptiveThresholdBinary(t, temp, false);
+        } else if(CommandConstants.ADAPTIVE_GAUSSIAN_COMMAND.equals(command)) {
+            ImageProcessUtils.adaptiveThresholdBinary(t, temp, true);
         }
         imageView.setImageBitmap(temp);
     }
