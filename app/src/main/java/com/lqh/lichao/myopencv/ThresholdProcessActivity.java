@@ -55,7 +55,8 @@ public class ThresholdProcessActivity extends AppCompatActivity implements View.
         selecBbtn.setOnClickListener(this);
         seekBar.setOnSeekBarChangeListener(this);
 
-        selectedBitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.test);
+        //轮廓发现
+        selectedBitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.happyfish);
         imageView.setImageBitmap(selectedBitmap);
         textView.setText("当前阈值为: " + seekBar.getProgress());
     }
@@ -133,6 +134,21 @@ public class ThresholdProcessActivity extends AppCompatActivity implements View.
             ImageProcessUtils.adaptiveThresholdBinary(t, temp, false);
         } else if(CommandConstants.ADAPTIVE_GAUSSIAN_COMMAND.equals(command)) {
             ImageProcessUtils.adaptiveThresholdBinary(t, temp, true);
+        } else if(CommandConstants.CANNY_EDGE_COMMAND.equals(command)) {
+            ImageProcessUtils.cannyEdge(t, temp);
+        } else if(CommandConstants.HOUGH_LINES_COMMAND.equals(command)) {
+            ImageProcessUtils.houghLinesDet(t, temp);
+        } else if(CommandConstants.HOUGH_CIRCLE_COMMAND.equals(command)) {
+            ImageProcessUtils.houghCircleDet(t, temp);
+        } else if(CommandConstants.FIND_CONTOURS_COMMAND.equals(command)) {
+            ImageProcessUtils.findAndDrawContours(t, temp);
+        } else if(CommandConstants.MEASURE_OBJECT_COMMAND.equals(command)) {
+            double[][] results = ImageProcessUtils.measureObjects(t, temp);
+            for (int i = 0; i < results.length; i++) {
+                Log.i("Measure Data:", "第 " + i + " 轮廓");
+                Log.i("Measure Data:", "周长: " + results[i][0]);
+                Log.i("Measure Data:", "面积: " + results[i][1]);
+            }
         }
         imageView.setImageBitmap(temp);
     }

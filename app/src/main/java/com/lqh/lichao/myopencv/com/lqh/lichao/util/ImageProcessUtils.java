@@ -7,11 +7,19 @@ import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
+import org.opencv.objdetect.CascadeClassifier;
+
+import java.util.ArrayList;
+import java.util.List;
 import static com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants.CUSTOM_BLUR_COMMAND;
 import static com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants.CUSTOM_EDGE_COMMAND;
 import static com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants.CUSTOM_SHARPEN_COMMAND;
@@ -428,5 +436,205 @@ public class ImageProcessUtils {
         src.release();
         xgrad.release();
         ygrad.release();
+    }
+
+    /**
+     * Canny边缘
+     * @param t
+     * @param bitmap
+     */
+    public static void cannyEdge(int t, Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.GaussianBlur(src, src, new Size(3, 3), 0, 0, 4);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2GRAY);
+        Imgproc.Canny(src, dst, t, t*2, 3, false);
+        Utils.matToBitmap(dst, bitmap);
+        src.release();
+        dst.release();
+    }
+
+    /**
+     * Hough直线检测
+     * @param t
+     * @param bitmap
+     */
+    public static void houghLinesDet(int t, Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Mat lines = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.GaussianBlur(src, src, new Size(3, 3), 0, 0, 4);
+        Imgproc.Canny(src, dst, t, t*2, 3, false);
+        Mat drawImg = new Mat(src.size(), src.type());
+        //形态学获取方法
+        /*Imgproc.HoughLines(dst, lines, 1, Math.PI/180.0, t);
+        double[] linep = new double[2];
+        for(int i=0; i<lines.cols(); i++) {
+            linep = lines.get(0, i);
+            double rho = linep[0];
+            double theta = linep[1];
+            double a = Math.cos(theta);
+            double b = Math.sin(theta);
+            double x0 = a*rho;
+            double y0 = b*rho;
+            Point p1 = new Point(x0+1000*(-b), y0 + 1000*a);
+            Point p2 = new Point(x0-1000*(-b), y0 - 1000*a);
+            Core.line(drawImg, p1, p2, new Scalar(255, 0, 0, 0), 2, 8, 0);
+        }*/
+
+        // 直接得到直线的方法
+        Imgproc.HoughLinesP(dst, lines, 1, Math.PI/180, t, 15, 3);
+        double[] pts = new double[4];
+        for(int i=0; i<lines.cols(); i++) {
+            pts = lines.get(0, i);
+            Point p1 = new Point(pts[0], pts[1]);
+            Point p2 = new Point(pts[2], pts[3]);
+            Core.line(drawImg, p1, p2, new Scalar(255, 0, 0, 0), 2, 8, 0);
+        }
+
+        Utils.matToBitmap(drawImg, bitmap);
+        src.release();
+        lines.release();
+        drawImg.release();
+        dst.release();
+    }
+
+    /**
+     * Hough圆检测
+     * @param t
+     * @param bitmap
+     */
+    public static void houghCircleDet(int t, Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2GRAY);//转换成灰度
+        //根据像素设置最小半径和最大半径，这两个字没设置好，检测的圆不会出现
+        Imgproc.HoughCircles(src, dst, Imgproc.CV_HOUGH_GRADIENT, 1, 15, t*2, 65, 20, 50);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_GRAY2BGR);//转换成彩色
+        double[] circleParams = new double[3];
+        for(int i=0; i<dst.cols(); i++) {
+            circleParams = dst.get(0, i);
+            Point cp = new Point(circleParams[0], circleParams[1]);
+            Core.circle(src, cp,  (int)circleParams[2], new Scalar(255, 0, 0, 0), 2, 8, 0);
+        }
+        Utils.matToBitmap(src, bitmap);
+        src.release();
+        dst.release();
+    }
+
+    /**
+     * 模板匹配
+     * @param tpl
+     * @param bitmap
+     */
+    public static void templateMatchDemo(Bitmap tpl, Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat tplMat = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Utils.bitmapToMat(tpl, tplMat);
+        int width = bitmap.getWidth() - tpl.getWidth() + 1;
+        int height = bitmap.getHeight() - tpl.getHeight() + 1;
+        Mat result = new Mat(width, height, CvType.CV_32FC1);
+        Imgproc.matchTemplate(src, tplMat, result, Imgproc.TM_CCORR_NORMED);//有六个模板
+        Core.normalize(result, result, 0, 1.0, Core.NORM_MINMAX, -1);
+        Core.MinMaxLocResult minMaxLocResult = Core.minMaxLoc(result);
+        Point pt = minMaxLocResult.maxLoc;
+        Core.rectangle(src, pt, new Point(pt.x+tpl.getWidth(), pt.y+tpl.getHeight()),
+                new Scalar(255, 0, 0, 0), 2, 8, 0);
+        Utils.matToBitmap(src, bitmap);
+        src.release();
+        result.release();
+        tplMat.release();
+    }
+
+    /**
+     * 轮廓发现
+     * @param t
+     * @param bitmap
+     */
+    public static void findAndDrawContours(int t, Bitmap bitmap) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2GRAY);//灰度图像
+        Imgproc.Canny(src, dst, t, t*2, 3, false);//寻找边缘
+        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+        Mat hierarchy = new Mat();
+        //发现轮廓
+        Imgproc.findContours(dst, contours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE, new Point(0, 0));
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_GRAY2BGR);//转换成彩色
+        for(int i=0; i<contours.size(); i++) {
+            MatOfPoint points = contours.get(i);
+            //绘制轮廓
+            Imgproc.drawContours(src, contours, i, new Scalar(255, 0, 0), 2, 8, hierarchy, 0, new Point(0, 0));
+        }
+        Utils.matToBitmap(src, bitmap);
+        src.release();
+        dst.release();
+        hierarchy.release();
+    }
+
+    /**
+     * 对象测量
+     * @param t
+     * @param bitmap
+     * @return
+     */
+    public static double[][] measureObjects(int t, Bitmap bitmap) {
+        // TODO:gloomyFish
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGRA2GRAY);
+        Imgproc.Canny(src, dst, t, t*2, 3, false);
+        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+        Mat hierarchy = new Mat();
+        Imgproc.findContours(dst, contours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE, new Point(0, 0));
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_GRAY2BGR);
+        double[][] result = new double[contours.size()][2];
+        for(int i=0; i<contours.size(); i++) {
+            Moments moments = Imgproc.moments(contours.get(i), false);
+            double m00 = moments.get_m00();
+            double m10 = moments.get_m10();
+            double m01 = moments.get_m01();
+            double x0 = m10 / m00;
+            double y0 = m01 / m00;
+            double arclength = Imgproc.arcLength(new MatOfPoint2f(contours.get(i).toArray()), true);
+            double area = Imgproc.contourArea(contours.get(i));
+            result[i][0] = arclength;
+            result[i][1] = area;
+            Core.circle(src, new Point(x0, y0), 2, new Scalar(255, 0, 0), 2, 8, 0);
+        }
+        Utils.matToBitmap(src, bitmap);
+        src.release();
+        dst.release();
+        hierarchy.release();
+        return result;
+    }
+
+    /**
+     * 人脸检测
+     * @param bitmap
+     * @param detector
+     */
+    public static void faceDetect(Bitmap bitmap, CascadeClassifier detector) {
+        Mat src = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(bitmap, src);
+        Imgproc.cvtColor(src, dst, Imgproc.COLOR_BGRA2GRAY);
+        MatOfRect faces = new MatOfRect();
+        detector.detectMultiScale(dst, faces, 1.1, 15, 0, new Size(50, 50), new Size());
+        List<Rect> faceList = faces.toList();
+        if(faceList.size() > 0) {
+            for(Rect rect : faceList) {
+                Core.rectangle(src, rect.tl(), rect.br(), new Scalar(255, 0, 0, 255), 2, 8, 0);
+            }
+        }
+        Utils.matToBitmap(src, bitmap);
+        src.release();
+        dst.release();
     }
 }

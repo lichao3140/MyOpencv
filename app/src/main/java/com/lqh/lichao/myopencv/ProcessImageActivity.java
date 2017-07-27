@@ -1,5 +1,6 @@
 package com.lqh.lichao.myopencv;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,6 +15,10 @@ import android.widget.Toast;
 import com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants;
 import com.lqh.lichao.myopencv.com.lqh.lichao.util.ImageProcessUtils;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.objdetect.CascadeClassifier;
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -23,6 +28,7 @@ public class ProcessImageActivity extends AppCompatActivity implements View.OnCl
     private int REQUEST_GET_IMAGE = 1;
     private String command;
     private Bitmap selectedBitmap;
+    private CascadeClassifier faceDetector;
     private Button testBtn;
     private Button selecBbtn;
     private ImageView imageView;
@@ -32,6 +38,11 @@ public class ProcessImageActivity extends AppCompatActivity implements View.OnCl
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_process);
         initLoadOpenCVLib();
+        try {
+            initFaceDetector();
+        } catch (IOException ioe) {
+            Log.i("IOERR", ioe.getMessage());
+        }
         init();
     }
 
@@ -48,6 +59,23 @@ public class ProcessImageActivity extends AppCompatActivity implements View.OnCl
 
         selectedBitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.test1);
         imageView.setImageBitmap(selectedBitmap);
+    }
+
+    private void initFaceDetector() throws IOException {
+        InputStream input = getResources().openRawResource(R.raw.lbpcascade_frontalface);
+        File cascadeDir = this.getDir("cascade", Context.MODE_PRIVATE);
+        File file = new File(cascadeDir.getAbsoluteFile(), "lbpcascade_frontalface.xml");
+        FileOutputStream output = new FileOutputStream(file);
+        byte[] buff = new byte[1024];
+        int len = 0;
+        while((len = input.read(buff)) != -1) {
+            output.write(buff, 0, len);
+        }
+        input.close();
+        output.close();
+        faceDetector = new CascadeClassifier(file.getAbsolutePath());
+        file.delete();
+        cascadeDir.delete();
     }
 
     private void initLoadOpenCVLib() {
@@ -162,6 +190,12 @@ public class ProcessImageActivity extends AppCompatActivity implements View.OnCl
             ImageProcessUtils.sobleGradient(temp, 2);
         } else if(CommandConstants.GRADIENT_IMG_COMMAND.equals(command)) {
             ImageProcessUtils.sobleGradient(temp, 3);
+        } else if(CommandConstants.TEMPLATE_MATCH_COMMAND.equals(command)) {
+            Bitmap tpl = BitmapFactory.decodeResource(this.getResources(), R.drawable.sample);
+            ImageProcessUtils.templateMatchDemo(tpl, temp);
+        } else if(CommandConstants.FIND_FACE_COMMAND.equals(command)) {
+            // TODO:zhigang
+            ImageProcessUtils.faceDetect(temp, faceDetector);
         }
         imageView.setImageBitmap(temp);
     }
