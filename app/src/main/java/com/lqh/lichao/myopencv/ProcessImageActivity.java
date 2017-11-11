@@ -5,15 +5,16 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.Toast;
+
 import com.lqh.lichao.myopencv.com.lqh.lichao.adapter.CommandConstants;
 import com.lqh.lichao.myopencv.com.lqh.lichao.util.ImageProcessUtils;
+
 import org.opencv.android.OpenCVLoader;
 import org.opencv.objdetect.CascadeClassifier;
 
@@ -61,6 +62,10 @@ public class ProcessImageActivity extends AppCompatActivity implements View.OnCl
         imageView.setImageBitmap(selectedBitmap);
     }
 
+    /**
+     * 初始化级联操作器
+     * @throws IOException
+     */
     private void initFaceDetector() throws IOException {
         InputStream input = getResources().openRawResource(R.raw.lbpcascade_frontalface);
         File cascadeDir = this.getDir("cascade", Context.MODE_PRIVATE);
